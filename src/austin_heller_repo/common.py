@@ -29,3 +29,9 @@ class HostPointer():
 
 	def get_host_port(self) -> int:
 		return self.__host_port
+
+
+def static_init(cls):
+	if getattr(cls, "static_init", None):
+		cls.static_init()
+	return cls
