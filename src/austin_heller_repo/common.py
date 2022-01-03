@@ -2,6 +2,8 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Tuple, Dict
 from abc import ABC, abstractmethod
+import hashlib
+import json
 
 
 class StringEnum(Enum):
@@ -35,3 +37,10 @@ def static_init(cls):
 	if getattr(cls, "static_init", None):
 		cls.static_init()
 	return cls
+
+
+def hash_json_dict(*, json_dict: Dict) -> str:
+	hash_instance = hashlib.sha256()
+	encoded_json_dict = json.dumps(json_dict, sort_keys=True).encode()
+	hash_instance.update(encoded_json_dict)
+	return hash_instance.hexdigest()
