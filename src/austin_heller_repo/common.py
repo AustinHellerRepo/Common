@@ -44,3 +44,16 @@ def hash_json_dict(*, json_dict: Dict) -> str:
 	encoded_json_dict = json.dumps(json_dict, sort_keys=True).encode()
 	hash_instance.update(encoded_json_dict)
 	return hash_instance.hexdigest()
+
+
+class FloatReference():
+
+	def __init__(self, *, value: float):
+
+		self.__value = value
+
+	def get(self) -> float:
+		return self.__value
+
+	def set(self, *, value: float):
+		self.__value = value
