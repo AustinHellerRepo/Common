@@ -1,10 +1,12 @@
 from __future__ import annotations
 from enum import Enum
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Callable, Any, Deque
 from abc import ABC, abstractmethod
 import hashlib
 import json
 from datetime import datetime, timedelta
+from threading import Semaphore
+from collections import deque
 
 
 class StringEnum(Enum):
@@ -135,3 +137,68 @@ class DateTimeDeltaCalculator():
 		else:
 			# now exists within
 			raise NotImplementedError()
+
+
+class CachedDependentDependencyManager():
+
+	def __init__(self, on_dependent_dependency_satisfied_callback: Callable[[Any, Any], None], is_dependency_reusable: bool):
+
+		self.__on_dependent_dependency_satisfied_callback = on_dependent_dependency_satisfied_callback
+		self.__is_dependency_reusable = is_dependency_reusable
+
+		# this contains a list of dependents are are waiting for the same key as the dependency_cache
+		self.__dependent_cache = {}  # type: Dict[Any, Deque[Any]]
+		# this contains each dependencies that a dependent may need
+		self.__dependency_cache = {}  # type: Dict[Any, Deque[Any]]
+		self.__semaphore = Semaphore()
+
+	def __get_dependent_dependency_pairs(self, *, key: Any) -> List[Tuple[Any, Any]]:
+		pairs = []  # type: List[Tuple[Any, Any]]
+		if key in self.__dependent_cache and key in self.__dependency_cache:
+			while self.__dependent_cache[key] and self.__dependency_cache[key]:
+				dependent = self.__dependent_cache[key].popleft()
+				dependency = self.__dependency_cache[key].popleft()
+				pairs.append((dependent, dependency))
+				if self.__is_dependency_reusable:
+					self.__dependency_cache[key].append(dependency)
+			if not self.__dependent_cache[key]:
+				del self.__dependent_cache[key]
+			if not self.__dependency_cache[key]:
+				del self.__dependency_cache[key]
+		return pairs
+
+	def add_dependency(self, *, key: Any, dependency: Any):
+
+		self.__semaphore.acquire()
+		try:
+			if key not in self.__dependency_cache:
+				self.__dependency_cache[key] = deque()
+			self.__dependency_cache[key].append(dependency)
+
+			pairs = self.__get_dependent_dependency_pairs(
+				key=key
+			)
+		finally:
+			self.__semaphore.release()
+
+		if pairs:
+			for pair in pairs:
+				self.__on_dependent_dependency_satisfied_callback(*pair)
+
+	def add_dependent(self, *, key: Any, dependent: Any):
+
+		self.__semaphore.acquire()
+		try:
+			if key not in self.__dependent_cache:
+				self.__dependent_cache[key] = deque()
+			self.__dependent_cache[key].append(dependent)
+
+			pairs = self.__get_dependent_dependency_pairs(
+				key=key
+			)
+		finally:
+			self.__semaphore.release()
+
+		if pairs:
+			for pair in pairs:
+				self.__on_dependent_dependency_satisfied_callback(*pair)
