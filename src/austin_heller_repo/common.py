@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timedelta
 from threading import Semaphore
 from collections import deque
+from itertools import cycle, chain
 
 
 class StringEnum(Enum):
@@ -141,7 +142,7 @@ class DateTimeDeltaCalculator():
 
 class CachedDependentDependencyManager():
 
-	def __init__(self, on_dependent_dependency_satisfied_callback: Callable[[Any, Any], None], is_dependency_reusable: bool):
+	def __init__(self, *, on_dependent_dependency_satisfied_callback: Callable[[Any, Any, Any], None], is_dependency_reusable: bool):
 
 		self.__on_dependent_dependency_satisfied_callback = on_dependent_dependency_satisfied_callback
 		self.__is_dependency_reusable = is_dependency_reusable
@@ -183,9 +184,9 @@ class CachedDependentDependencyManager():
 
 		if pairs:
 			for pair in pairs:
-				self.__on_dependent_dependency_satisfied_callback(*pair)
+				self.__on_dependent_dependency_satisfied_callback(*pair, key)
 
-	def add_dependent(self, *, key: Any, dependent: Any):
+	def add_dependent(self, *, dependent: Any, key: Any):
 
 		self.__semaphore.acquire()
 		try:
@@ -201,4 +202,55 @@ class CachedDependentDependencyManager():
 
 		if pairs:
 			for pair in pairs:
-				self.__on_dependent_dependency_satisfied_callback(*pair)
+				self.__on_dependent_dependency_satisfied_callback(*pair, key)
+
+
+class AggregateDependentDependencyManager():
+
+	def __init__(self, *, on_dependent_dependency_satisfied_callback: Callable[[Any, List[Tuple[Any, Any]]], None]):
+
+		self.__on_dependent_dependency_satisfied_callback = on_dependent_dependency_satisfied_callback
+
+		self.__expected_dependencies_total_per_dependent = {}  # type: Dict[Any, int]
+		self.__dependency_and_key_pair_per_dependent = {}  # type: Dict[Any, List[Tuple[Any, Any]]]
+		self.__dependencies_per_dependent_semaphore = Semaphore()
+		self.__cached_dependent_dependency_manager_per_is_reusable = {}  # type: Dict[bool, CachedDependentDependencyManager]
+
+		self.__initialize()
+
+	def __initialize(self):
+		for is_reusable in [True, False]:
+			self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable] = CachedDependentDependencyManager(
+				on_dependent_dependency_satisfied_callback=self.__cached_dependent_dependency_manager_on_dependent_dependency_satisfied_callback,
+				is_dependency_reusable=is_reusable
+			)
+
+	def __cached_dependent_dependency_manager_on_dependent_dependency_satisfied_callback(self, dependent: Any, dependency: Any, key: Any):
+		self.__dependency_and_key_pair_per_dependent[dependent].append((dependency, key))
+		if len(self.__dependency_and_key_pair_per_dependent[dependent]) == self.__expected_dependencies_total_per_dependent[dependent]:
+			self.__on_dependent_dependency_satisfied_callback(dependent, self.__dependency_and_key_pair_per_dependent[dependent])
+			del self.__dependency_and_key_pair_per_dependent[dependent]
+			del self.__expected_dependencies_total_per_dependent[dependent]
+
+	def add_dependent(self, *, dependent: Any, reusable_keys: List[Any], nonreusable_keys: List[Any]):
+		self.__dependencies_per_dependent_semaphore.acquire()
+		try:
+			self.__expected_dependencies_total_per_dependent[dependent] = len(reusable_keys) + len(nonreusable_keys)
+			self.__dependency_and_key_pair_per_dependent[dependent] = []
+			for dependency_key, is_reusable in chain(zip(reusable_keys, cycle([True])), zip(nonreusable_keys, cycle([False]))):
+				self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependent(
+					key=dependency_key,
+					dependent=dependent
+				)
+		finally:
+			self.__dependencies_per_dependent_semaphore.release()
+
+	def add_dependency(self, *, key: Any, dependency: Any, is_reusable: bool):
+		self.__dependencies_per_dependent_semaphore.acquire()
+		try:
+			self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependency(
+				key=key,
+				dependency=dependency
+			)
+		finally:
+			self.__dependencies_per_dependent_semaphore.release()
