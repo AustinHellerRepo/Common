@@ -1,17 +1,17 @@
 from __future__ import annotations
 import unittest
 from typing import List, Tuple, Dict
-from src.austin_heller_repo.common import CachedDependentDependencyManager
+from src.austin_heller_repo.common import SingleDependentDependencyManager
 
 
-class CachedDependentDependencyManagerTest(unittest.TestCase):
+class SingleDependentDependencyManagerTest(unittest.TestCase):
 
 	def test_initialize(self):
 
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			raise NotImplementedError()
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)
@@ -21,11 +21,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependent_and_one_dependency(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)
@@ -47,11 +47,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependency_and_one_dependent(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)
@@ -73,11 +73,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependent_and_one_unrelated_dependency(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)
@@ -99,11 +99,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependency_and_one_unrelated_dependent(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)
@@ -125,11 +125,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependent_and_one_reusable_dependency(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=True
 		)
@@ -151,11 +151,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_two_reusable_dependencies_and_three_dependents_add_another_dependency_and_three_dependents(self):
 		found_pairs = []  # type: List[Tuple[str, str]]
 
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=True
 		)
@@ -201,11 +201,11 @@ class CachedDependentDependencyManagerTest(unittest.TestCase):
 	def test_one_dependency_and_one_dependent_multiple_times(self):
 
 		found_pairs = []  # type: List[Tuple[str, str]]
-		def on_dependent_dependency_satisfied_callback(dependent, dependency):
+		def on_dependent_dependency_satisfied_callback(dependent, dependency, key):
 			nonlocal found_pairs
 			found_pairs.append((dependent, dependency))
 
-		manager = CachedDependentDependencyManager(
+		manager = SingleDependentDependencyManager(
 			on_dependent_dependency_satisfied_callback=on_dependent_dependency_satisfied_callback,
 			is_dependency_reusable=False
 		)

@@ -140,7 +140,7 @@ class DateTimeDeltaCalculator():
 			raise NotImplementedError()
 
 
-class CachedDependentDependencyManager():
+class SingleDependentDependencyManager():
 
 	def __init__(self, *, on_dependent_dependency_satisfied_callback: Callable[[Any, Any, Any], None], is_dependency_reusable: bool):
 
@@ -148,33 +148,33 @@ class CachedDependentDependencyManager():
 		self.__is_dependency_reusable = is_dependency_reusable
 
 		# this contains a list of dependents are are waiting for the same key as the dependency_cache
-		self.__dependent_cache = {}  # type: Dict[Any, Deque[Any]]
+		self.__dependents_per_key = {}  # type: Dict[Any, Deque[Any]]
 		# this contains each dependencies that a dependent may need
-		self.__dependency_cache = {}  # type: Dict[Any, Deque[Any]]
+		self.__dependencies_per_key = {}  # type: Dict[Any, Deque[Any]]
 		self.__semaphore = Semaphore()
 
 	def __get_dependent_dependency_pairs(self, *, key: Any) -> List[Tuple[Any, Any]]:
 		pairs = []  # type: List[Tuple[Any, Any]]
-		if key in self.__dependent_cache and key in self.__dependency_cache:
-			while self.__dependent_cache[key] and self.__dependency_cache[key]:
-				dependent = self.__dependent_cache[key].popleft()
-				dependency = self.__dependency_cache[key].popleft()
+		if key in self.__dependents_per_key and key in self.__dependencies_per_key:
+			while self.__dependents_per_key[key] and self.__dependencies_per_key[key]:
+				dependent = self.__dependents_per_key[key].popleft()
+				dependency = self.__dependencies_per_key[key].popleft()
 				pairs.append((dependent, dependency))
 				if self.__is_dependency_reusable:
-					self.__dependency_cache[key].append(dependency)
-			if not self.__dependent_cache[key]:
-				del self.__dependent_cache[key]
-			if not self.__dependency_cache[key]:
-				del self.__dependency_cache[key]
+					self.__dependencies_per_key[key].append(dependency)
+			if not self.__dependents_per_key[key]:
+				del self.__dependents_per_key[key]
+			if not self.__dependencies_per_key[key]:
+				del self.__dependencies_per_key[key]
 		return pairs
 
 	def add_dependency(self, *, key: Any, dependency: Any):
 
 		self.__semaphore.acquire()
 		try:
-			if key not in self.__dependency_cache:
-				self.__dependency_cache[key] = deque()
-			self.__dependency_cache[key].append(dependency)
+			if key not in self.__dependencies_per_key:
+				self.__dependencies_per_key[key] = deque()
+			self.__dependencies_per_key[key].append(dependency)
 
 			pairs = self.__get_dependent_dependency_pairs(
 				key=key
@@ -190,9 +190,9 @@ class CachedDependentDependencyManager():
 
 		self.__semaphore.acquire()
 		try:
-			if key not in self.__dependent_cache:
-				self.__dependent_cache[key] = deque()
-			self.__dependent_cache[key].append(dependent)
+			if key not in self.__dependents_per_key:
+				self.__dependents_per_key[key] = deque()
+			self.__dependents_per_key[key].append(dependent)
 
 			pairs = self.__get_dependent_dependency_pairs(
 				key=key
@@ -214,18 +214,18 @@ class AggregateDependentDependencyManager():
 		self.__expected_dependencies_total_per_dependent = {}  # type: Dict[Any, int]
 		self.__dependency_and_key_pair_per_dependent = {}  # type: Dict[Any, List[Tuple[Any, Any]]]
 		self.__dependencies_per_dependent_semaphore = Semaphore()
-		self.__cached_dependent_dependency_manager_per_is_reusable = {}  # type: Dict[bool, CachedDependentDependencyManager]
+		self.__single_dependent_dependency_manager_per_is_reusable = {}  # type: Dict[bool, SingleDependentDependencyManager]
 
 		self.__initialize()
 
 	def __initialize(self):
 		for is_reusable in [True, False]:
-			self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable] = CachedDependentDependencyManager(
-				on_dependent_dependency_satisfied_callback=self.__cached_dependent_dependency_manager_on_dependent_dependency_satisfied_callback,
+			self.__single_dependent_dependency_manager_per_is_reusable[is_reusable] = SingleDependentDependencyManager(
+				on_dependent_dependency_satisfied_callback=self.__single_dependent_dependency_manager_on_dependent_dependency_satisfied_callback,
 				is_dependency_reusable=is_reusable
 			)
 
-	def __cached_dependent_dependency_manager_on_dependent_dependency_satisfied_callback(self, dependent: Any, dependency: Any, key: Any):
+	def __single_dependent_dependency_manager_on_dependent_dependency_satisfied_callback(self, dependent: Any, dependency: Any, key: Any):
 		self.__dependency_and_key_pair_per_dependent[dependent].append((dependency, key))
 		if len(self.__dependency_and_key_pair_per_dependent[dependent]) == self.__expected_dependencies_total_per_dependent[dependent]:
 			self.__on_dependent_dependency_satisfied_callback(dependent, self.__dependency_and_key_pair_per_dependent[dependent])
@@ -238,7 +238,7 @@ class AggregateDependentDependencyManager():
 			self.__expected_dependencies_total_per_dependent[dependent] = len(reusable_keys) + len(nonreusable_keys)
 			self.__dependency_and_key_pair_per_dependent[dependent] = []
 			for dependency_key, is_reusable in chain(zip(reusable_keys, cycle([True])), zip(nonreusable_keys, cycle([False]))):
-				self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependent(
+				self.__single_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependent(
 					key=dependency_key,
 					dependent=dependent
 				)
@@ -248,7 +248,7 @@ class AggregateDependentDependencyManager():
 	def add_dependency(self, *, key: Any, dependency: Any, is_reusable: bool):
 		self.__dependencies_per_dependent_semaphore.acquire()
 		try:
-			self.__cached_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependency(
+			self.__single_dependent_dependency_manager_per_is_reusable[is_reusable].add_dependency(
 				key=key,
 				dependency=dependency
 			)
