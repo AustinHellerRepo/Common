@@ -5,9 +5,11 @@ from abc import ABC, abstractmethod
 import hashlib
 import json
 from datetime import datetime, timedelta
+import time
 from threading import Semaphore
 from collections import deque
 from itertools import cycle, chain
+from timeit import default_timer
 
 
 class StringEnum(Enum):
@@ -254,3 +256,30 @@ class AggregateDependentDependencyManager():
 			)
 		finally:
 			self.__dependencies_per_dependent_semaphore.release()
+
+
+class ElapsedTime():
+
+	def __init__(self):
+
+		# TODO add ability to specify formats, etc.
+
+		#self.__start_datetime = None  # type: datetime
+		#self.__start_time = None  # type: time.struct_time
+		self.__start_timer_value = None
+
+		pass
+
+	def __enter__(self):
+		#self.__start_datetime = datetime.utcnow()
+		#self.__start_time = time.time()
+		self.__start_timer_value = default_timer()
+		return self
+
+	def __exit__(self, exc_type, exc_val, exc_tb):
+		return
+
+	def get_time_seconds(self) -> float:
+		#return (datetime.utcnow() - self.__start_datetime).total_seconds()
+		#return (time.time() - self.__start_time)
+		return (default_timer() - self.__start_timer_value)
