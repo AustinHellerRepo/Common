@@ -264,15 +264,11 @@ class ElapsedTime():
 
 		# TODO add ability to specify formats, etc.
 
-		#self.__start_datetime = None  # type: datetime
-		#self.__start_time = None  # type: time.struct_time
 		self.__start_timer_value = None
 
 		pass
 
 	def __enter__(self):
-		#self.__start_datetime = datetime.utcnow()
-		#self.__start_time = time.time()
 		self.__start_timer_value = default_timer()
 		return self
 
@@ -280,6 +276,9 @@ class ElapsedTime():
 		return
 
 	def get_time_seconds(self) -> float:
-		#return (datetime.utcnow() - self.__start_datetime).total_seconds()
-		#return (time.time() - self.__start_time)
+		next_timer_value = default_timer()
+		time_seconds, self.__start_timer_value = next_timer_value - self.__start_timer_value, next_timer_value
+		return time_seconds
+
+	def peek_time_seconds(self) -> float:
 		return (default_timer() - self.__start_timer_value)
