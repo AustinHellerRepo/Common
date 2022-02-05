@@ -38,6 +38,19 @@ class HostPointer():
 	def get_host_port(self) -> int:
 		return self.__host_port
 
+	def to_json(self) -> Dict:
+		return {
+			"host_address": self.__host_address,
+			"host_port": self.__host_port
+		}
+
+	@staticmethod
+	def parse_json(*, json_dict: Dict) -> HostPointer:
+		return HostPointer(
+			host_address=json_dict["host_address"],
+			host_port=json_dict["host_port"]
+		)
+
 
 def static_init(cls):
 	if getattr(cls, "static_init", None):
