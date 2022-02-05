@@ -25,7 +25,19 @@ class StringEnum(Enum):
 		return string_list
 
 
-class HostPointer():
+class JsonInterchangeable(ABC):
+
+	@abstractmethod
+	def to_json(self) -> Dict:
+		raise NotImplementedError()
+
+	@staticmethod
+	@abstractmethod
+	def parse_json(*, json_dict: Dict) -> JsonInterchangeable:
+		raise NotImplementedError()
+
+
+class HostPointer(JsonInterchangeable):
 
 	def __init__(self, *, host_address: str, host_port: int):
 
