@@ -282,3 +282,6 @@ class ElapsedTime():
 
 	def peek_time_seconds(self) -> float:
 		return (default_timer() - self.__start_timer_value)
+
+
+DateFormat_Year_Month_Day_Hour_Minute_Second_Millisecond = "%Y-%m-%d %H:%M:%S.%f"
