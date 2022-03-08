@@ -10,6 +10,7 @@ from threading import Semaphore
 from collections import deque
 from itertools import cycle, chain
 from timeit import default_timer
+import subprocess
 
 
 class StringEnum(Enum):
@@ -310,3 +311,22 @@ class ElapsedTime():
 
 
 DateFormat_Year_Month_Day_Hour_Minute_Second_Millisecond = "%Y-%m-%d %H:%M:%S.%f"
+
+
+class SubprocessWrapper():
+
+	def __init__(self, *, command: str, arguments: List[str]):
+
+		self.__command = command
+		self.__arguments = arguments
+
+	def run(self) -> str:
+
+		formatted_command = [self.__command] + self.__arguments
+
+		standard_output = None  # type: str
+
+		with subprocess.Popen(formatted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process_handle:
+			standard_output = process_handle.stdout.read().decode()
+
+		return standard_output
