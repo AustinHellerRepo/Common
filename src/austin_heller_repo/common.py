@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from enum import Enum
 from typing import List, Tuple, Dict, Callable, Any, Deque
 from abc import ABC, abstractmethod
@@ -320,6 +321,8 @@ class SubprocessWrapper():
 		self.__command = command
 		self.__arguments = arguments
 
+		self.__subprocess = None  # type: subprocess.Popen
+
 	def run(self) -> str:
 
 		formatted_command = [self.__command] + self.__arguments
@@ -327,6 +330,16 @@ class SubprocessWrapper():
 		standard_output = None  # type: str
 
 		with subprocess.Popen(formatted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process_handle:
+			self.__subprocess = process_handle
 			standard_output = process_handle.stdout.read().decode()
+		self.__subprocess = None
 
 		return standard_output
+
+	def kill(self):
+		if self.__subprocess is not None:
+			self.__subprocess.kill()
+
+
+def is_directory_empty(directory_path) -> bool:
+	return not any(os.path.isfile(os.path.join(directory_path, file_name)) for file_name in os.listdir(directory_path))
