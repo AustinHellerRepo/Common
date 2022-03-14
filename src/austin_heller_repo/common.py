@@ -323,18 +323,17 @@ class SubprocessWrapper():
 
 		self.__subprocess = None  # type: subprocess.Popen
 
-	def run(self) -> str:
+	def run(self) -> Tuple[int, str]:
 
 		formatted_command = [self.__command] + self.__arguments
-
-		standard_output = None  # type: str
 
 		with subprocess.Popen(formatted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process_handle:
 			self.__subprocess = process_handle
 			standard_output = process_handle.stdout.read().decode()
+			return_code = process_handle.returncode
 		self.__subprocess = None
 
-		return standard_output
+		return return_code, standard_output
 
 	def kill(self):
 		if self.__subprocess is not None:
