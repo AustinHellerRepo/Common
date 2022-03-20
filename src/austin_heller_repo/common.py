@@ -411,6 +411,7 @@ def copy_to_clipboard(*, text: str):
 		instance.withdraw()
 		instance.clipboard_clear()
 		instance.clipboard_append(text)
+		instance.mainloop()
 	finally:
 		instance.destroy()
 
@@ -420,6 +421,7 @@ def paste_from_clipboard() -> str:
 	try:
 		instance.withdraw()
 		text = instance.clipboard_get()
+		instance.mainloop()
 	finally:
 		instance.destroy()
 	return text
