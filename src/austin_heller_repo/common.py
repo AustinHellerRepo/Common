@@ -418,6 +418,7 @@ def copy_to_clipboard(*, text: str):
 def paste_from_clipboard() -> str:
 	instance = Tk()
 	try:
+		instance.withdraw()
 		text = instance.clipboard_get()
 	finally:
 		instance.destroy()

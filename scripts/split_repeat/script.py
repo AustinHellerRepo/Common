@@ -45,28 +45,40 @@ if is_run_expected:
 	original_text = paste_from_clipboard()
 	print(f"original_text: {original_text}")
 
-	escaped_format_list = []  # type: List[str]
-	is_escaped = False
-	for character in format:
-		if is_escaped:
-			if character == "n":
-				escaped_format_list.append("\n")
-			elif character == "t":
-				escaped_format_list.append("\t")
+	def escape_text(*, text) -> str:
+		escaped_text_list = []  # type: List[str]
+		is_escaped = False
+		for character in text:
+			if is_escaped:
+				if character == "n":
+					escaped_text_list.append("\n")
+				elif character == "t":
+					escaped_text_list.append("\t")
+				else:
+					escaped_text_list.append(character)
+				is_escaped = False
 			else:
-				escaped_format_list.append(character)
-			is_escaped = False
-		else:
-			if character == "\\":
-				is_escaped = True
-			else:
-				escaped_format_list.append(character)
-	escaped_format = "".join(escaped_format_list)
+				if character == "\\":
+					is_escaped = True
+				else:
+					escaped_text_list.append(character)
+		return "".join(escaped_text_list)
+
+	# escape the format
+	escaped_format = escape_text(
+		text=format
+	)
 	print(f"escaped_format: {escaped_format}")
+
+	# escape the delimiter
+	escaped_delimiter = escape_text(
+		text=delimiter
+	)
+	print(f"escaped_delimiter: {escaped_delimiter}")
 
 	formatted_text = split_repeat(
 		text=original_text,
-		delimiter=delimiter,
+		delimiter=escaped_delimiter,
 		format=escaped_format,
 		iteration_type=iteration_type,
 		repetition_total=repetition_total
@@ -75,3 +87,4 @@ if is_run_expected:
 	copy_to_clipboard(
 		text=formatted_text
 	)
+	print(f"Copied to clipboard.")
