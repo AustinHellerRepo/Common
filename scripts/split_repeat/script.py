@@ -5,6 +5,7 @@ except ImportError:
 
 import sys
 from typing import List
+import pyperclip
 
 delimiter = None  # type: str
 format = None  # type: str
@@ -42,7 +43,7 @@ for argument_index in range(len(sys.argv)):
 			is_run_expected = False
 
 if is_run_expected:
-	original_text = paste_from_clipboard()
+	original_text = pyperclip.paste()
 	print(f"original_text: {original_text}")
 
 	def escape_text(*, text) -> str:
@@ -84,7 +85,5 @@ if is_run_expected:
 		repetition_total=repetition_total
 	)
 	print(f"formatted_text: {formatted_text}")
-	copy_to_clipboard(
-		text=formatted_text
-	)
+	pyperclip.copy(formatted_text)
 	print(f"Copied to clipboard.")
