@@ -407,23 +407,17 @@ def split_repeat(text: str, delimiter: str, format: str, iteration_type: Iterati
 
 def copy_to_clipboard(*, text: str):
 	instance = Tk()
-	try:
-		instance.withdraw()
-		instance.clipboard_clear()
-		instance.clipboard_append(text)
-		instance.after(100, instance.destroy())
-		instance.mainloop()
-	finally:
-		instance.destroy()
+	instance.withdraw()
+	instance.clipboard_clear()
+	instance.clipboard_append(text)
+	instance.after(100, instance.destroy())
+	instance.mainloop()
 
 
 def paste_from_clipboard() -> str:
 	instance = Tk()
-	try:
-		instance.withdraw()
-		text = instance.clipboard_get()
-		instance.after(100, instance.destroy())
-		instance.mainloop()
-	finally:
-		instance.destroy()
+	instance.withdraw()
+	text = instance.clipboard_get()
+	instance.after(100, instance.destroy())
+	instance.mainloop()
 	return text
