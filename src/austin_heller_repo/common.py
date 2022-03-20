@@ -9,9 +9,10 @@ from datetime import datetime, timedelta
 import time
 from threading import Semaphore
 from collections import deque
-from itertools import cycle, chain
+from itertools import cycle, chain, repeat
 from timeit import default_timer
 import subprocess
+from tkinter import Tk
 
 
 class StringEnum(Enum):
@@ -342,3 +343,82 @@ class SubprocessWrapper():
 
 def is_directory_empty(directory_path) -> bool:
 	return not any(os.path.isfile(os.path.join(directory_path, file_name)) for file_name in os.listdir(directory_path))
+
+
+class IterationTypeEnum(StringEnum):
+	Stutter = "stutter"
+	Cycle = "cycle"
+
+
+def split_repeat(text: str, delimiter: str, format: str, iteration_type: IterationTypeEnum, repetition_total: int) -> str:
+
+	output_elements = []  # type: List[str]
+
+	if delimiter == "" or delimiter is None:
+		text_parts = [text]
+	else:
+		text_parts = text.split(delimiter)
+
+	if iteration_type == IterationTypeEnum.Cycle:
+		iterator = chain(*[x for x in repeat(text_parts, repetition_total)])
+	elif iteration_type == IterationTypeEnum.Stutter:
+		iterator = chain.from_iterable(repeat(x, repetition_total) for x in text_parts)
+	else:
+		raise Exception(f"Unexpected {IterationTypeEnum.__name__} value {iteration_type}.")
+
+	iterator_elements = [x for x in iterator]
+	iterator_elements_index = 0
+	iterator_elements_total = len(iterator_elements)
+
+	while iterator_elements_index < iterator_elements_total:
+		is_escaped = False
+		characters_total = len(format)
+		character_index = 0
+		while character_index < characters_total:
+			character = format[character_index]
+			if is_escaped:
+				output_element = character
+				is_escaped = False
+			else:
+				if character == "\\":
+					is_escaped = True
+				else:
+					if character == "{":
+						# replacement object
+						if format[character_index:character_index+3] == "{x}":
+							is_at_least_one_replace_object = True
+							output_element = iterator_elements[iterator_elements_index]
+							iterator_elements_index += 1
+							character_index += 2
+						else:
+							raise Exception(f"Unexpected curly brace at index {character_index}.")
+					else:
+						output_element = character
+			if not is_escaped:
+				output_elements.append(output_element)
+
+			character_index += 1
+
+		if not is_at_least_one_replace_object:
+			raise Exception(f"Failed to find any replacement objects in format: {format}")
+
+	return "".join(output_elements)
+
+
+def copy_to_clipboard(*, text: str):
+	instance = Tk()
+	try:
+		instance.withdraw()
+		instance.clipboard_clear()
+		instance.clipboard_append(text)
+	finally:
+		instance.destroy()
+
+
+def paste_from_clipboard() -> str:
+	instance = Tk()
+	try:
+		text = instance.clipboard_get()
+	finally:
+		instance.destroy()
+	return text
