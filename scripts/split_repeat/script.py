@@ -11,6 +11,7 @@ delimiter = None  # type: str
 format = None  # type: str
 iteration_type = None  # type: IterationTypeEnum
 repetition_total = None  # type: int
+is_debug = False
 
 is_run_expected = True
 
@@ -42,10 +43,13 @@ for argument_index in range(len(sys.argv)):
 		elif sys.argv[argument_index] == "--version":
 			print(f"split_repeat: Version 0.0.1")
 			is_run_expected = False
+		elif sys.argv[argument_index] == "--debug":
+			is_debug = True
 
 if is_run_expected:
 	original_text = pyperclip.paste()
-	print(f"original_text: {original_text}")
+	if is_debug:
+		print(f"original_text: {original_text}")
 
 	def escape_text(*, text) -> str:
 		escaped_text_list = []  # type: List[str]
@@ -70,13 +74,15 @@ if is_run_expected:
 	escaped_format = escape_text(
 		text=format
 	)
-	print(f"escaped_format: {escaped_format}")
+	if is_debug:
+		print(f"escaped_format: {escaped_format}")
 
 	# escape the delimiter
 	escaped_delimiter = escape_text(
 		text=delimiter
 	)
-	print(f"escaped_delimiter: {escaped_delimiter}")
+	if is_debug:
+		print(f"escaped_delimiter: {escaped_delimiter}")
 
 	formatted_text = split_repeat(
 		text=original_text,
@@ -85,6 +91,8 @@ if is_run_expected:
 		iteration_type=iteration_type,
 		repetition_total=repetition_total
 	)
-	print(f"formatted_text: {formatted_text}")
+	if is_debug:
+		print(f"formatted_text: {formatted_text}")
 	pyperclip.copy(formatted_text)
-	print(f"Copied to clipboard.")
+	if is_debug:
+		print(f"Copied to clipboard.")
