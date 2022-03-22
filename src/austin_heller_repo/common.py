@@ -12,7 +12,6 @@ from collections import deque
 from itertools import cycle, chain, repeat
 from timeit import default_timer
 import subprocess
-from tkinter import Tk
 
 
 class StringEnum(Enum):
@@ -403,23 +402,3 @@ def split_repeat(text: str, delimiter: str, format: str, iteration_type: Iterati
 			raise Exception(f"Failed to find any replacement objects in format: {format}")
 
 	return "".join(output_elements)
-
-
-def copy_to_clipboard(*, text: str):
-	instance = Tk()
-	try:
-		instance.withdraw()
-		instance.clipboard_clear()
-		instance.clipboard_append(text)
-	finally:
-		instance.destroy()
-
-
-def paste_from_clipboard() -> str:
-	instance = Tk()
-	try:
-		instance.withdraw()
-		text = instance.clipboard_get()
-	finally:
-		instance.destroy()
-	return text
