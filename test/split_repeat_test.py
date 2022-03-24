@@ -12,6 +12,7 @@ class SplitRepeatTest(unittest.TestCase):
 		actual_output = split_repeat(
 			text=expected_output,
 			delimiter="",
+			is_delimiter_regex=False,
 			format="{x}",
 			iteration_type=IterationTypeEnum.Stutter,
 			repetition_total=1
@@ -24,6 +25,7 @@ class SplitRepeatTest(unittest.TestCase):
 		actual_output = split_repeat(
 			text=expected_output,
 			delimiter="",
+			is_delimiter_regex=False,
 			format="{x}",
 			iteration_type=IterationTypeEnum.Cycle,
 			repetition_total=1
@@ -36,6 +38,7 @@ class SplitRepeatTest(unittest.TestCase):
 		actual_output = split_repeat(
 			text=expected_output,
 			delimiter=",",
+			is_delimiter_regex=False,
 			format="{x},{x}",
 			iteration_type=IterationTypeEnum.Stutter,
 			repetition_total=1
@@ -48,6 +51,7 @@ class SplitRepeatTest(unittest.TestCase):
 		actual_output = split_repeat(
 			text=expected_output,
 			delimiter=",",
+			is_delimiter_regex=False,
 			format="{x},{x}",
 			iteration_type=IterationTypeEnum.Cycle,
 			repetition_total=1
@@ -96,7 +100,21 @@ class SplitRepeatTest(unittest.TestCase):
 		result = split_repeat(
 			text=text,
 			delimiter=": str,",
+			is_delimiter_regex=False,
 			format="\tdef get_{x}(self) -> str:\n\t\treturn self.__{x}\n\n",
+			iteration_type=IterationTypeEnum.Stutter,
+			repetition_total=2
+		)
+
+		print(f"result: {result}")
+
+	def test_actual_problem_002(self):
+
+		result = split_repeat(
+			text="id: str, x: int, y: int, w: int, h",
+			delimiter=r"\: (str|int), ",
+			is_delimiter_regex=True,
+			format="\t\tself.__{x} = {x}\n",
 			iteration_type=IterationTypeEnum.Stutter,
 			repetition_total=2
 		)

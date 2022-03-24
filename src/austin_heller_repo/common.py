@@ -12,6 +12,7 @@ from collections import deque
 from itertools import cycle, chain, repeat
 from timeit import default_timer
 import subprocess
+import re
 
 
 class StringEnum(Enum):
@@ -349,14 +350,29 @@ class IterationTypeEnum(StringEnum):
 	Cycle = "cycle"
 
 
-def split_repeat(text: str, delimiter: str, format: str, iteration_type: IterationTypeEnum, repetition_total: int) -> str:
+def split_repeat(text: str, delimiter: str, is_delimiter_regex: bool, format: str, iteration_type: IterationTypeEnum, repetition_total: int) -> str:
 
 	output_elements = []  # type: List[str]
 
 	if delimiter == "" or delimiter is None:
 		text_parts = [text]
 	else:
-		text_parts = text.split(delimiter)
+		if is_delimiter_regex:
+			delimiters = re.search(delimiter, text)
+			if not delimiters:
+				text_parts = [text]
+			else:
+				text_parts = []  # type: List[str]
+				while delimiters:
+					found_delimiter = delimiters.group(0)
+					text_part = text[:text.index(found_delimiter)]
+					text_parts.append(text_part)
+					text = text[text.index(found_delimiter) + len(found_delimiter):]
+					delimiters = re.search(delimiter, text)
+				if text != "":
+					text_parts.append(text)
+		else:
+			text_parts = text.split(delimiter)
 
 	if iteration_type == IterationTypeEnum.Cycle:
 		iterator = chain(*[x for x in repeat(text_parts, repetition_total)])

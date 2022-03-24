@@ -8,6 +8,7 @@ from typing import List
 import pyperclip
 
 delimiter = None  # type: str
+is_regex = None  # type: bool
 format = None  # type: str
 iteration_type = None  # type: IterationTypeEnum
 repetition_total = None  # type: int
@@ -20,6 +21,11 @@ for argument_index in range(len(sys.argv)):
 		if sys.argv[argument_index] == "-d":
 			argument_index += 1
 			delimiter = sys.argv[argument_index]
+			is_regex = False
+		elif sys.argv[argument_index] == "-dr":
+			argument_index += 1
+			delimiter = sys.argv[argument_index]
+			is_regex = True
 		elif sys.argv[argument_index] == "-f":
 			argument_index += 1
 			format = sys.argv[argument_index]
@@ -31,16 +37,19 @@ for argument_index in range(len(sys.argv)):
 			iteration_type = IterationTypeEnum.Cycle
 			argument_index += 1
 			repetition_total = int(sys.argv[argument_index])
-		elif sys.argv[argument_index] == "--help":
+		elif sys.argv[argument_index] == "--help" or sys.argv[argument_index] == "-h":
 			print(f"Copy the text you want to format into your clipboard and then run the command.")
 			print(f"Standard:")
 			print(f"sr -d [delimiter] -f [format] -stutter [repetition total]")
 			print(f"sr -d [delimiter] -f [format] -cycle [repetition total]")
+			print(f"sr -dr [delimiter as regex] -f [format] -stutter [repetition total]")
+			print(f"sr -dr [delimiter as regex] -f [format] -cycle [repetition total]")
 			print(f"Examples:")
 			print(f"sr -d \",\" -f \"info for {{x}}: {{x}}\\n\" -stutter 2")
 			print(f"sr -d \",\" -f \"the first item is {{x}} and the second item is {{x}}. That was {{x}} and {{x}}.\" -loop 2")
+			print(f"sr -dr \": (str|int), \" -f \"\\t\\tself.__{{x}} = {{x}}\\n\" -stutter 2")
 			is_run_expected = False
-		elif sys.argv[argument_index] == "--version":
+		elif sys.argv[argument_index] == "--version" or sys.argv[argument_index] == "-v":
 			print(f"split_repeat: Version 0.0.1")
 			is_run_expected = False
 		elif sys.argv[argument_index] == "--debug":
