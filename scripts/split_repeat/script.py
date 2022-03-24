@@ -1,7 +1,7 @@
 try:
-	from src.austin_heller_repo.common import split_repeat, copy_to_clipboard, paste_from_clipboard, IterationTypeEnum
+	from src.austin_heller_repo.common import split_repeat, IterationTypeEnum
 except ImportError:
-	from austin_heller_repo.common import split_repeat, copy_to_clipboard, paste_from_clipboard, IterationTypeEnum
+	from austin_heller_repo.common import split_repeat, IterationTypeEnum
 
 import sys
 from typing import List
@@ -96,6 +96,7 @@ if is_run_expected:
 	formatted_text = split_repeat(
 		text=original_text,
 		delimiter=escaped_delimiter,
+		is_delimiter_regex=is_regex,
 		format=escaped_format,
 		iteration_type=iteration_type,
 		repetition_total=repetition_total
