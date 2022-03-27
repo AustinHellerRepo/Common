@@ -418,3 +418,37 @@ def split_repeat(text: str, delimiter: str, is_delimiter_regex: bool, format: st
 			raise Exception(f"Failed to find any replacement objects in format: {format}")
 
 	return "".join(output_elements)
+
+def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overlap_threshold: float) -> List[Tuple[int, int, int, int]]:
+
+	if len(rectangles) == 0:
+		return []
+	else:
+
+		areas = []  # type: List[int]
+		for rectangle in rectangles:
+			area = rectangle[2] * rectangle[3]
+			areas.append(area)
+
+		indexes = list(range(len(areas)))
+		for index, rectangle in enumerate(rectangles):
+
+			temp_indexes = [i for i in indexes if i != index]
+
+			for temp_index in temp_indexes:
+				temp_x1 = max(rectangle[0], rectangles[temp_index][0])
+				temp_y1 = max(rectangle[1], rectangles[temp_index][1])
+				temp_x2 = min(rectangle[0] + rectangle[2], rectangles[temp_index][0] + rectangles[temp_index][2])
+				temp_y2 = min(rectangle[1] + rectangle[3], rectangles[temp_index][1] + rectangles[temp_index][3])
+				w = max(0, temp_x2 - temp_x1)
+				h = max(0, temp_y2 - temp_y1)
+
+				# a ratio of how much the rectangle and the rectangles[temp_index] overlap
+				overlap = (w * h) / (areas[temp_index] + areas[index] - (w * h))
+
+				# the higher the threshold, the rectangle will be removed since it overlaps more
+				if overlap > overlap_threshold:
+					indexes.remove(index)
+					break
+
+		return [rectangle for rectangle_index, rectangle in enumerate(rectangles) if rectangle_index in indexes]
