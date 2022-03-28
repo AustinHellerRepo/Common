@@ -419,6 +419,7 @@ def split_repeat(text: str, delimiter: str, is_delimiter_regex: bool, format: st
 
 	return "".join(output_elements)
 
+
 def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overlap_threshold: float) -> List[Tuple[int, int, int, int]]:
 
 	if len(rectangles) == 0:
@@ -452,3 +453,81 @@ def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[int, int, i
 					break
 
 		return [rectangle for rectangle_index, rectangle in enumerate(rectangles) if rectangle_index in indexes]
+
+
+def get_average_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overlap_threshold: float) -> List[Tuple[int, int, int, int]]:
+
+	if len(rectangles) == 0:
+		return []
+	else:
+
+		areas = []  # type: List[int]
+		for rectangle in rectangles:
+			area = rectangle[2] * rectangle[3]
+			areas.append(area)
+
+		nearby_rectangle_indexes_per_rectangle_index = {}  # type: Dict[int, List[int]]
+		nearby_rectangle_indexes_totals_per_rectangle_index = {}  # type: Dict[int, int]
+
+		indexes = list(range(len(areas)))
+		for index, rectangle in enumerate(rectangles):
+
+			nearby_rectangle_indexes_per_rectangle_index[index] = []  # type: List[int]
+			temp_indexes = [i for i in indexes if i != index]
+
+			for temp_index in temp_indexes:
+				temp_x1 = max(rectangle[0], rectangles[temp_index][0])
+				temp_y1 = max(rectangle[1], rectangles[temp_index][1])
+				temp_x2 = min(rectangle[0] + rectangle[2], rectangles[temp_index][0] + rectangles[temp_index][2])
+				temp_y2 = min(rectangle[1] + rectangle[3], rectangles[temp_index][1] + rectangles[temp_index][3])
+				w = max(0, temp_x2 - temp_x1)
+				h = max(0, temp_y2 - temp_y1)
+
+				# a ratio of how much the rectangle and the rectangles[temp_index] overlap
+				overlap = (w * h) / (areas[temp_index] + areas[index] - (w * h))
+				print(f"overlap from {rectangle} to {rectangles[temp_index]} with {overlap}.")
+
+				# the higher the threshold, the rectangle will be removed since it overlaps more
+				if overlap > overlap_threshold:
+					nearby_rectangle_indexes_per_rectangle_index[index].append(temp_index)
+
+			nearby_rectangle_indexes_totals_per_rectangle_index[index] = len(nearby_rectangle_indexes_per_rectangle_index[index])
+
+		# start with the rectangles that have the most nearby rectangles
+		used_rectangle_index = set()
+		averaged_rectangles = []  # type: List[Tuple[int, int, int, int]]
+		for rectangle_index in sorted(nearby_rectangle_indexes_totals_per_rectangle_index, key=nearby_rectangle_indexes_totals_per_rectangle_index.get):
+
+			if rectangle_index not in used_rectangle_index:
+
+				used_rectangle_index.add(rectangle_index)
+
+				acceptable_rectangle_indexes = []  # type: List[int]
+				for nearby_rectangle_index in nearby_rectangle_indexes_per_rectangle_index[rectangle_index]:
+					if nearby_rectangle_index not in used_rectangle_index:
+						acceptable_rectangle_indexes.append(nearby_rectangle_index)
+				acceptable_rectangle_indexes.append(rectangle_index)
+
+				if acceptable_rectangle_indexes:
+
+					x1 = 0
+					y1 = 0
+					x2 = 0
+					y2 = 0
+
+					for acceptable_rectangle_index in acceptable_rectangle_indexes:
+						x1 += rectangles[acceptable_rectangle_index][0]
+						y1 += rectangles[acceptable_rectangle_index][1]
+						x2 += rectangles[acceptable_rectangle_index][0] + rectangles[acceptable_rectangle_index][2]
+						y2 += rectangles[acceptable_rectangle_index][1] + rectangles[acceptable_rectangle_index][3]
+
+						used_rectangle_index.add(acceptable_rectangle_index)
+
+					x1 /= len(acceptable_rectangle_indexes)
+					y1 /= len(acceptable_rectangle_indexes)
+					x2 /= len(acceptable_rectangle_indexes)
+					y2 /= len(acceptable_rectangle_indexes)
+
+					averaged_rectangles.append((x1, y1, x2 - x1, y2 - y1))
+
+		return averaged_rectangles
