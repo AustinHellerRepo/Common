@@ -52,3 +52,19 @@ class GetAverageRectanglesTest(unittest.TestCase):
 
 		print(f"actual_rectangles: {actual_rectangles}")
 		self.assertEqual(1, len(actual_rectangles))
+
+	def test_five_overlapping_rectangles(self):
+
+		actual_rectangles = get_average_rectangles(
+			rectangles=[
+				(1, 2, 2, 2),
+				(1.1, 2.1, 2, 2),
+				(1.1, 1.9, 2, 2),
+				(0.9, 1.9, 2, 2),
+				(0.9, 2.1, 2, 2)
+			],
+			overlap_threshold=0.75
+		)
+
+		print(f"actual_rectangles: {actual_rectangles}")
+		self.assertEqual(1, len(actual_rectangles))

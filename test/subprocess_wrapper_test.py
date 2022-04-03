@@ -22,8 +22,9 @@ class SubprocessWrapperTest(unittest.TestCase):
 			arguments=["./subprocess_wrapper/basic_script.sh"]
 		)
 
-		output = subprocess_wrapper.run()
+		exit_code, output = subprocess_wrapper.run()
 
+		self.assertEqual(0, exit_code)
 		self.assertEqual("Hello World\n", output)
 
 	def test_delayed_by_script(self):
@@ -34,7 +35,8 @@ class SubprocessWrapperTest(unittest.TestCase):
 		)
 
 		with ElapsedTime() as elapsed_time:
-			output = subprocess_wrapper.run()
+			exit_code, output = subprocess_wrapper.run()
 
 		self.assertGreater(elapsed_time.get_time_seconds(), 3)
+		self.assertEqual(0, exit_code)
 		self.assertEqual("", output)

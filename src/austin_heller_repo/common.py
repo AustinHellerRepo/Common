@@ -330,6 +330,7 @@ class SubprocessWrapper():
 
 		with subprocess.Popen(formatted_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as process_handle:
 			self.__subprocess = process_handle
+			process_handle.wait()
 			standard_output = process_handle.stdout.read().decode()
 			return_code = process_handle.returncode
 		self.__subprocess = None
@@ -420,13 +421,13 @@ def split_repeat(text: str, delimiter: str, is_delimiter_regex: bool, format: st
 	return "".join(output_elements)
 
 
-def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overlap_threshold: float) -> List[Tuple[int, int, int, int]]:
+def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[float, float, float, float]], overlap_threshold: float) -> List[Tuple[float, float, float, float]]:
 
 	if len(rectangles) == 0:
 		return []
 	else:
 
-		areas = []  # type: List[int]
+		areas = []  # type: List[float]
 		for rectangle in rectangles:
 			area = rectangle[2] * rectangle[3]
 			areas.append(area)
@@ -455,24 +456,25 @@ def get_non_maximum_suppression_rectangles(*, rectangles: List[Tuple[int, int, i
 		return [rectangle for rectangle_index, rectangle in enumerate(rectangles) if rectangle_index in indexes]
 
 
-def get_average_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overlap_threshold: float) -> List[Tuple[int, int, int, int]]:
+def get_average_rectangles(*, rectangles: List[Tuple[float, float, float, float]], overlap_threshold: float) -> List[Tuple[float, float, float, float]]:
 
 	if len(rectangles) == 0:
 		return []
 	else:
 
-		areas = []  # type: List[int]
+		areas = []  # type: List[float]
 		for rectangle in rectangles:
 			area = rectangle[2] * rectangle[3]
 			areas.append(area)
 
 		nearby_rectangle_indexes_per_rectangle_index = {}  # type: Dict[int, List[int]]
-		nearby_rectangle_indexes_totals_per_rectangle_index = {}  # type: Dict[int, int]
+		nearby_rectangle_indexes_magnitude_per_rectangle_index = {}  # type: Dict[int, float]
 
 		indexes = list(range(len(areas)))
 		for index, rectangle in enumerate(rectangles):
 
 			nearby_rectangle_indexes_per_rectangle_index[index] = []  # type: List[int]
+			nearby_rectangle_indexes_magnitude_per_rectangle_index[index] = 0.0  # type: float
 			temp_indexes = [i for i in indexes if i != index]
 
 			for temp_index in temp_indexes:
@@ -485,18 +487,17 @@ def get_average_rectangles(*, rectangles: List[Tuple[int, int, int, int]], overl
 
 				# a ratio of how much the rectangle and the rectangles[temp_index] overlap
 				overlap = (w * h) / (areas[temp_index] + areas[index] - (w * h))
-				print(f"overlap from {rectangle} to {rectangles[temp_index]} with {overlap}.")
+				print(f"{index}: overlap from {rectangle} to {rectangles[temp_index]} with {overlap}.")
 
 				# the higher the threshold, the rectangle will be removed since it overlaps more
 				if overlap > overlap_threshold:
 					nearby_rectangle_indexes_per_rectangle_index[index].append(temp_index)
-
-			nearby_rectangle_indexes_totals_per_rectangle_index[index] = len(nearby_rectangle_indexes_per_rectangle_index[index])
+					nearby_rectangle_indexes_magnitude_per_rectangle_index[index] += overlap
 
 		# start with the rectangles that have the most nearby rectangles
 		used_rectangle_index = set()
-		averaged_rectangles = []  # type: List[Tuple[int, int, int, int]]
-		for rectangle_index in sorted(nearby_rectangle_indexes_totals_per_rectangle_index, key=nearby_rectangle_indexes_totals_per_rectangle_index.get):
+		averaged_rectangles = []  # type: List[Tuple[float, float, float, float]]
+		for rectangle_index in sorted(nearby_rectangle_indexes_magnitude_per_rectangle_index, key=nearby_rectangle_indexes_magnitude_per_rectangle_index.get, reverse=True):
 
 			if rectangle_index not in used_rectangle_index:
 
