@@ -14,6 +14,7 @@ from timeit import default_timer
 import subprocess
 import re
 import uuid
+import inspect
 
 
 class StringEnum(Enum):
@@ -287,22 +288,13 @@ class AggregateDependentDependencyManager():
 			self.__dependencies_per_dependent_semaphore.release()
 
 
-class ElapsedTime():
+class ElapsedTimer():
 
 	def __init__(self):
 
 		# TODO add ability to specify formats, etc.
 
-		self.__start_timer_value = None
-
-		pass
-
-	def __enter__(self):
 		self.__start_timer_value = default_timer()
-		return self
-
-	def __exit__(self, exc_type, exc_val, exc_tb):
-		return
 
 	def get_time_seconds(self) -> float:
 		next_timer_value = default_timer()
@@ -311,6 +303,30 @@ class ElapsedTime():
 
 	def peek_time_seconds(self) -> float:
 		return (default_timer() - self.__start_timer_value)
+
+
+class ElapsedTimerMessageManager():
+
+	def __init__(self, *, include_datetime_prefix: bool, include_stack: bool, stack_offset: int = 0):
+
+		self.__include_datetime_prefix = include_datetime_prefix
+		self.__include_stack = include_stack
+		self.__stack_offset = stack_offset
+
+		self.__elapsed_timer = ElapsedTimer()
+		self.__elapsed_seconds_total_per_message = {}  # type: Dict[str, int]
+
+	def print(self, message: str, override_stack_offset: int = None):
+
+		elapsed_seconds = self.__elapsed_timer.get_time_seconds()
+		if message not in self.__elapsed_seconds_total_per_message:
+			self.__elapsed_seconds_total_per_message[message] = 0
+		self.__elapsed_seconds_total_per_message[message] += elapsed_seconds
+		formatted_message = f"{str(datetime.utcnow()) + ': ' if self.__include_datetime_prefix else ''}{inspect.stack()[1 + (override_stack_offset if override_stack_offset is not None else self.__stack_offset)][3] + ': ' if self.__include_stack else ''}{elapsed_seconds}: {message}"
+		print(formatted_message)
+
+	def get_elapsed_seconds_total_per_message(self) -> Dict[str, int]:
+		return self.__elapsed_seconds_total_per_message.copy()
 
 
 DateFormat_Year_Month_Day_Hour_Minute_Second_Millisecond = "%Y-%m-%d %H:%M:%S.%f"
