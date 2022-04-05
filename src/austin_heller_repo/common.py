@@ -13,6 +13,7 @@ from itertools import cycle, chain, repeat
 from timeit import default_timer
 import subprocess
 import re
+import uuid
 
 
 class StringEnum(Enum):
@@ -532,3 +533,24 @@ def get_average_rectangles(*, rectangles: List[Tuple[float, float, float, float]
 					averaged_rectangles.append((x1, y1, x2 - x1, y2 - y1))
 
 		return averaged_rectangles
+
+
+def get_unique_directory_path(*, parent_directory_path: str) -> str:
+	_child_directory_path = None
+	while _child_directory_path is None:
+		_child_directory_name = str(uuid.uuid4())
+		_child_directory_path = os.path.join(parent_directory_path, _child_directory_name)
+		if os.path.exists(_child_directory_path):
+			_child_directory_path = None
+	return _child_directory_path
+
+
+def get_unique_file_path(*, parent_directory_path: str, extension: str) -> str:
+	_formatted_extension = extension if extension.startswith(".") else f".{extension}"
+	_child_file_path = None
+	while _child_file_path is None:
+		_child_file_name = f"{uuid.uuid4()}{_formatted_extension}"
+		_child_file_path = os.path.join(parent_directory_path, _child_file_name)
+		if os.path.exists(_child_file_path):
+			_child_file_path = None
+	return _child_file_path
