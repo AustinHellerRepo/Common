@@ -15,6 +15,7 @@ import subprocess
 import re
 import uuid
 import inspect
+import shutil
 
 
 class StringEnum(Enum):
@@ -359,8 +360,17 @@ class SubprocessWrapper():
 			self.__subprocess.kill()
 
 
-def is_directory_empty(directory_path) -> bool:
+def is_directory_empty(directory_path: str) -> bool:
 	return not any(os.path.isfile(os.path.join(directory_path, file_name)) for file_name in os.listdir(directory_path))
+
+
+def delete_directory_contents(directory_path: str):
+	for file_name in os.listdir(directory_path):
+		file_path = os.path.join(directory_path, file_name)
+		if os.path.isfile(file_path) or os.path.islink(file_path):
+			os.unlink(file_path)
+		elif os.path.isdir(file_path):
+			shutil.rmtree(file_path)
 
 
 class IterationTypeEnum(StringEnum):
