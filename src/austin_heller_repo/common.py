@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from enum import Enum
-from typing import List, Tuple, Dict, Callable, Any, Deque
+from typing import List, Tuple, Dict, Callable, Any, Deque, Type
 from abc import ABC, abstractmethod
 import hashlib
 import json
@@ -580,3 +580,74 @@ def get_unique_file_path(*, parent_directory_path: str, extension: str) -> str:
 		if os.path.exists(_child_file_path):
 			_child_file_path = None
 	return _child_file_path
+
+
+def get_subclasses(*, cls: Type, include_children: bool) -> List[Type]:
+	subclasses = cls.__subclasses__()
+	if include_children:
+		children = []  # type: List[Type]
+		for subclass in subclasses:
+			children.extend(get_subclasses(
+				cls=subclass,
+				include_children=True
+			))
+		subclasses.extend(children)
+	return subclasses
+
+
+class JsonParsableException(Exception):
+
+	def __init__(self, *args):
+		super().__init__(*args)
+
+		pass
+
+
+class JsonParsable(ABC):
+
+	@classmethod
+	@abstractmethod
+	def get_json_parsable_type_dictionary_key(cls) -> str:
+		raise NotImplementedError()
+
+	@classmethod
+	def parse_json(cls, *, json_dict) -> JsonParsable:
+		if cls.__name__ == JsonParsable.__name__:
+			raise JsonParsableException(f"Cannot parse json with JsonParsable class. You must create a parent class for all of your subclasses to inherit from.")
+		elif cls in get_subclasses(
+			cls=JsonParsable,
+			include_children=False
+		):
+			subclasses = get_subclasses(
+				cls=cls,
+				include_children=True
+			)  # type: List[Type[JsonParsable]]
+
+			parse_class = None
+			for subclass in subclasses:
+				if subclass.get_json_parsable_type().value == json_dict[cls.get_json_parsable_type_dictionary_key()]:
+					parse_class = subclass
+					break
+
+			if parse_class is None:
+				raise JsonParsableException(f"Failed to find subclass for type \"{json_dict[cls.get_json_parsable_type_dictionary_key()]}\".")
+
+		else:
+			if cls.get_json_parsable_type().value != json_dict[cls.get_json_parsable_type_dictionary_key()]:
+				raise JsonParsableException(f"Cannot parse json to type {cls.__name__} when json specifies type {json_dict[cls.get_json_parsable_type_dictionary_key()]}.")
+
+			parse_class = cls
+
+		del json_dict[cls.get_json_parsable_type_dictionary_key()]
+		return parse_class(**json_dict)
+
+	@abstractmethod
+	def to_json(self) -> Dict:
+		return {
+			self.__class__.get_json_parsable_type_dictionary_key(): self.__class__.get_json_parsable_type().value
+		}
+
+	@classmethod
+	@abstractmethod
+	def get_json_parsable_type(cls) -> StringEnum:
+		raise NotImplementedError()
