@@ -360,8 +360,8 @@ class SubprocessWrapper():
 			self.__subprocess.kill()
 
 
-def is_directory_empty(directory_path: str) -> bool:
-	return not any(os.path.isfile(os.path.join(directory_path, file_name)) for file_name in os.listdir(directory_path))
+def is_directory_empty(*, directory_path: str) -> bool:
+	return not next(os.scandir(directory_path), None)
 
 
 def delete_directory_contents(directory_path: str):
