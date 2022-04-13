@@ -651,3 +651,15 @@ class JsonParsable(ABC):
 	@abstractmethod
 	def get_json_parsable_type(cls) -> StringEnum:
 		raise NotImplementedError()
+
+
+def get_all_files_in_directory(*, directory_path: str, include_subdirectories: bool) -> List[str]:
+	files = []  # type: List[str]
+
+	if include_subdirectories:
+		for walk_directory_path, walk_directory_names, walk_file_names in os.walk(directory_path):
+			files.extend([os.path.join(walk_directory_path, walk_file_name) for walk_file_name in walk_file_names])
+	else:
+		files.extend([os.path.join(directory_path, file_name) for file_name in os.listdir(directory_path)])
+
+	return files
