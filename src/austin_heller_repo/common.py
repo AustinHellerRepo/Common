@@ -16,6 +16,7 @@ import re
 import uuid
 import inspect
 import shutil
+import random
 
 
 class StringEnum(Enum):
@@ -663,3 +664,14 @@ def get_all_files_in_directory(*, directory_path: str, include_subdirectories: b
 		files.extend([os.path.join(directory_path, file_name) for file_name in os.listdir(directory_path)])
 
 	return files
+
+
+def get_random_rainbow_color(*, random_instance: random.Random = None) -> Tuple[float, float, float]:
+	if random_instance is None:
+		random_instance = random.Random()
+	main_color_index = random_instance.randrange(3)
+	secondary_color_amount = random_instance.random()
+	color_r = 1 if main_color_index == 0 else secondary_color_amount if main_color_index == 1 else 1 - secondary_color_amount
+	color_g = 1 if main_color_index == 1 else secondary_color_amount if main_color_index == 2 else 1 - secondary_color_amount
+	color_b = 1 if main_color_index == 2 else secondary_color_amount if main_color_index == 0 else 1 - secondary_color_amount
+	return (color_r, color_g, color_b)
