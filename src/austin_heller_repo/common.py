@@ -362,7 +362,8 @@ class SubprocessWrapper():
 
 
 def is_directory_empty(*, directory_path: str) -> bool:
-	return not next(os.scandir(directory_path), None)
+	with os.scandir(directory_path) as scan_dir:
+		return not next(scan_dir, None)
 
 
 def delete_directory_contents(directory_path: str):
