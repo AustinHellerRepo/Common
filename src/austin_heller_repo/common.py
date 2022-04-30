@@ -17,6 +17,7 @@ import uuid
 import inspect
 import shutil
 import random
+import base64
 
 
 class StringEnum(Enum):
@@ -678,3 +679,15 @@ def get_random_rainbow_color(*, random_instance: random.Random = None) -> Tuple[
 	color_g = 1 if main_color_index == 1 else secondary_color_amount if main_color_index == 2 else 1 - secondary_color_amount
 	color_b = 1 if main_color_index == 2 else secondary_color_amount if main_color_index == 0 else 1 - secondary_color_amount
 	return (color_r, color_g, color_b)
+
+
+def load_file_as_base64string(*, file_path: str) -> str:
+	with open(file_path, "rb") as file_handle:
+		file_bytes = file_handle.read()
+	return base64.b64encode(file_bytes)
+
+
+def save_file_from_base64string(*, file_bytes_base64string: str, file_path: str):
+	file_bytes = base64.b64decode(file_bytes_base64string)
+	with open(file_path, "wb") as file_handle:
+		file_handle.write(file_bytes)
