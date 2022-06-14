@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import time
 from threading import Semaphore
 from collections import deque
-from itertools import cycle, chain, repeat
+from itertools import cycle, chain, repeat, groupby
 from timeit import default_timer
 import subprocess
 import re
@@ -691,3 +691,48 @@ def save_file_from_base64string(*, file_bytes_base64string: str, file_path: str)
 	file_bytes = base64.b64decode(file_bytes_base64string)
 	with open(file_path, "wb") as file_handle:
 		file_handle.write(file_bytes)
+
+
+def get_delimited_string_regex_pattern_frequencies(*, text: str):
+	regex_patterns = []  # type: List[str]
+	lines = text.replace("\r\n", "\n").split("\n")
+	regex_replacement_per_original = {
+		r"|": r"\|",
+		"\\": "\\\\",
+		r"(": r"\(",
+		r")": r"\)",
+		r".": r"\.",
+		r"+": r"\+",
+		r"*": r"\*",
+		r"?": r"\?",
+		r"^": r"\^",
+		r"$": r"\$",
+		r"[": r"\[",
+		r"]": r"\]",
+		r"{": r"\{",
+		r"}": r"\}",
+		r"-": r"\-"
+	}
+
+	def get_replacement(text: str) -> str:
+		output = text
+		for original, replacement in regex_replacement_per_original.items():
+			output = output.replace(original, replacement)
+		return output
+
+	for line in lines:
+		# pair up string sequences
+		for delimiter, replacement in zip([" ", "|", ",", "\t"], [" +", r"\|+", ",+", r"\t+"]):
+			delimited_words = [x for x in line.split(delimiter) if x != ""]
+			if len(delimited_words) > 1:
+				escaped_delimited_words = [
+					get_replacement(x) for x in delimited_words
+				]
+				for start_word_index in range(len(delimited_words)):
+					for end_word_index in range(start_word_index + 1, len(delimited_words) + 1):
+						regex_pattern = replacement.join(escaped_delimited_words[start_word_index:end_word_index])
+						regex_patterns.append(regex_pattern)
+
+	total_per_regex_pattern = dict((x, regex_patterns.count(x)) for x in set(regex_patterns))
+
+	return total_per_regex_pattern
