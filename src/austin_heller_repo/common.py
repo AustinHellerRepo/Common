@@ -7,7 +7,7 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 import time
-from threading import Semaphore
+from threading import Semaphore, Lock
 from collections import deque
 from itertools import cycle, chain, repeat, groupby
 from timeit import default_timer
@@ -18,6 +18,8 @@ import inspect
 import shutil
 import random
 import base64
+import io
+import pathlib
 
 
 class StringEnum(Enum):
@@ -39,9 +41,9 @@ class JsonInterchangeable(ABC):
 	def to_json(self) -> Dict:
 		raise NotImplementedError()
 
-	@staticmethod
+	@classmethod
 	@abstractmethod
-	def parse_json(*, json_dict: Dict) -> JsonInterchangeable:
+	def parse_json(cls, *, json_dict: Dict) -> JsonInterchangeable:
 		raise NotImplementedError()
 
 
@@ -736,3 +738,90 @@ def get_delimited_string_regex_pattern_frequencies(*, text: str):
 	total_per_regex_pattern = dict((x, regex_patterns.count(x)) for x in set(regex_patterns))
 
 	return total_per_regex_pattern
+
+
+class StoredCollection():
+
+	def __init__(self, *, directory_path: str):
+		self.__directory_path = directory_path
+
+		self.__subdirectory_path = None  # type: str
+		self.__index_file_path = None  # type: str
+		self.__index_file_handle = None  # type: io.BytesIO
+		self.__count_file_path = None  # type: str
+		self.__count = None  # type: int
+		self.__index_bytes_length = None  # type: int
+		self.__is_index_file_handle_at_end = None  # type: bool
+
+		self.__initialize()
+
+	def __initialize(self):
+		self.__subdirectory_path = os.path.join(self.__directory_path, "collection")
+		pathlib.Path(self.__subdirectory_path).mkdir(parents=True, exist_ok=True)
+
+		self.__index_file_path = os.path.join(self.__directory_path, ".index")
+		self.__index_file_handle = open(self.__index_file_path, "w+b")
+		self.__index_file_handle.seek(0, io.SEEK_END)
+		self.__index_bytes_length = self.__index_file_handle.tell()
+		self.__is_index_file_handle_at_end = True
+
+		self.__count_file_path = os.path.join(self.__directory_path, ".count")
+		if os.path.exists(self.__count_file_path):
+			with open(self.__count_file_path, "r") as file_handle:
+				self.__count = int(file_handle.readline())
+		else:
+			self.__count = 0
+
+	def append(self, *, json_dict: dict):
+		file_uuid = uuid.uuid4()
+		file_uuid_bytes = file_uuid.bytes
+		file_uuid_string = str(file_uuid)
+		file_path = os.path.join(self.__subdirectory_path, f"{file_uuid_string}.ser")
+		with open(file_path, "w") as file_handle:
+			json.dump(json_dict, file_handle)
+		if not self.__is_index_file_handle_at_end:
+			self.__index_file_handle.seek(0, io.SEEK_END)
+			self.__is_index_file_handle_at_end = True
+		self.__index_file_handle.write(file_uuid_bytes)
+		self.__index_bytes_length += 17
+		self.__count += 1
+
+	def get(self) -> dict:
+		if not self.__is_index_file_handle_at_end:
+			file_uuid_bytes = self.__index_file_handle.read(16)
+			if self.__index_file_handle.tell() == self.__index_bytes_length:
+				self.__is_index_file_handle_at_end = True
+			file_uuid = uuid.UUID(bytes=file_uuid_bytes)
+			file_uuid_string = str(file_uuid)
+			file_path = os.path.join(self.__subdirectory_path, f"{file_uuid_string}.ser")
+			with open(file_path, "r") as file_handle:
+				return json.load(file_handle)
+		return None
+
+	def try_process(self, process_method: Callable[[dict], dict]) -> bool:
+		if not self.__is_index_file_handle_at_end:
+			file_uuid_bytes = self.__index_file_handle.read(16)
+			if self.__index_file_handle.tell() == self.__index_bytes_length:
+				self.__is_index_file_handle_at_end = True
+			file_uuid = uuid.UUID(bytes=file_uuid_bytes)
+			file_uuid_string = str(file_uuid)
+			file_path = os.path.join(self.__subdirectory_path, f"{file_uuid_string}.ser")
+			with open(file_path, "r") as file_handle:
+				json_dict = json.load(file_handle)
+			processed_json_dict = process_method(json_dict)
+			if processed_json_dict is not None:
+				with open(file_path, "w") as file_handle:
+					json.dump(processed_json_dict, file_handle)
+			return True
+		return False
+
+	def reset(self):
+		if self.__index_bytes_length != 0:
+			self.__index_file_handle.seek(0)
+			self.__is_index_file_handle_at_end = False
+
+	def count(self) -> int:
+		return self.__count
+
+	def dispose(self):
+		self.__index_file_handle.close()

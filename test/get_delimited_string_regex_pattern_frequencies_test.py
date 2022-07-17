@@ -92,3 +92,27 @@ class CommonRegexTest(unittest.TestCase):
         print(f"match: {match}")
 
         self.assertEqual((8, 9), match.span())
+
+    def test_finds_comma_delimiter(self):
+
+        source = "a,b,c\n" \
+                 "a,,b,c\n" \
+                 "a,b,,c"
+
+        total_per_regex = {k: v for k, v in reversed(sorted(get_delimited_string_regex_pattern_frequencies(
+            text=source
+        ).items(), key=lambda item: item[1]))}
+
+        print(f"total_per_regex: {total_per_regex}")
+
+        regex_pattern = list(total_per_regex.keys())[0]
+
+        print(f"regex_pattern: {regex_pattern}")
+
+        compiled_regex_pattern = re.compile(regex_pattern)
+
+        match = compiled_regex_pattern.search(source)
+
+        print(f"match: {match}")
+
+        self.assertEqual((8, 9), match.span())
