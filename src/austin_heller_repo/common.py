@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict, Callable, Any, Deque, Type
 from abc import ABC, abstractmethod
 import hashlib
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
 from threading import Semaphore, Lock
 from collections import deque
@@ -686,11 +686,11 @@ def get_random_rainbow_color(*, random_instance: random.Random = None) -> Tuple[
 def load_file_as_base64string(*, file_path: str) -> str:
 	with open(file_path, "rb") as file_handle:
 		file_bytes = file_handle.read()
-	return base64.b64encode(file_bytes)
+	return base64.b64encode(file_bytes).decode()
 
 
 def save_file_from_base64string(*, file_bytes_base64string: str, file_path: str):
-	file_bytes = base64.b64decode(file_bytes_base64string)
+	file_bytes = base64.b64decode(file_bytes_base64string.encode())
 	with open(file_path, "wb") as file_handle:
 		file_handle.write(file_bytes)
 
@@ -825,3 +825,25 @@ class StoredCollection():
 
 	def dispose(self):
 		self.__index_file_handle.close()
+
+
+datetime_string_format = "%Y-%m-%d %H:%M:%S.%f"
+
+
+def convert_datetime_to_string(*, datetime: datetime) -> str:
+	return datetime.strftime(datetime_string_format)
+
+
+def convert_string_to_datetime(*, string: str) -> datetime:
+	return datetime.strptime(string, datetime_string_format)
+
+
+date_string_format = "%Y-%m-%d"
+
+
+def convert_date_to_string(*, date: date) -> str:
+	return date.strftime(date_string_format)
+
+
+def convert_string_to_date(*, string: str) -> date:
+	return datetime.strptime(string, date_string_format).date()
