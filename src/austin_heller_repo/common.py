@@ -852,6 +852,6 @@ def convert_string_to_date(*, string: str) -> date:
 def get_random_date(random_instance: random.Random = None) -> date:
 	if random_instance is None:
 		random_instance = random.Random()
-	days_total = random_instance.randrange(3652059)
-	days_timedelta = timedelta(days=days_total)
+	days_total = random_instance.randrange(3287182)
+	days_timedelta = timedelta(days=days_total + 364877)
 	return date.min + days_timedelta

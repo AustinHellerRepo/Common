@@ -2,7 +2,7 @@ import unittest
 from datetime import date, datetime, timedelta
 import random
 import uuid
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Set
 from src.austin_heller_repo.common import get_random_date
 import itertools
 
@@ -10,9 +10,19 @@ import itertools
 days_between_min_and_max = (date.max - date.min)
 print(f"days between: {days_between_min_and_max}")
 
+# need to get days between 1000-01-01 and max in order to avoid less-than-4 digit years
+earliest_date = date(1000, 1, 1)
+print(f"days between 4 year earliest: {(date.max - earliest_date)}")
+
 days_total = 3652058
 add_days_timedelta = timedelta(days=days_total)
 print(f"min date {date.min} plus {days_total} equals {date.min + add_days_timedelta}.")
+
+
+four_year_days_total = 3287181
+offset_days_total = 364877
+four_year_add_days_timedelta = timedelta(days=four_year_days_total)
+print(f"min date {earliest_date} plus {four_year_days_total} equals {earliest_date + four_year_add_days_timedelta}.")
 
 
 class RandomDate(unittest.TestCase):
