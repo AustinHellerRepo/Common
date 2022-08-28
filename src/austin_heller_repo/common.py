@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from enum import Enum
-from typing import List, Tuple, Dict, Callable, Any, Deque, Type
+from typing import List, Tuple, Dict, Callable, Any, Deque, Type, Iterator, Iterable
 from abc import ABC, abstractmethod
 import hashlib
 import json
@@ -862,3 +862,12 @@ def get_random_string_enum_value(*, enum_type: Type[StringEnum], random_instance
         random_instance = random.Random()
     list_of_enum_types = list(enum_type)
     return list_of_enum_types[random_instance.randrange(len(list_of_enum_types))].value
+
+
+def next_again(iterator: Iterator, count: int, default: Any = None) -> Any:
+    if iterator is not Iterator:
+        iterator = iter(iterator)
+    output = default
+    for _ in range(count):
+        output = next(iterator, default)
+    return output
