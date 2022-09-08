@@ -871,3 +871,14 @@ def next_again(iterator: Iterator, count: int, default: Any = None) -> Any:
     for _ in range(count):
         output = next(iterator, default)
     return output
+
+
+def get_comma_delimited_english_phrases(*, phrases: List[str], final_combinator: str, default: str = None):
+    if not phrases:
+        return default
+    phrases_total = len(phrases)
+    if phrases_total == 1:
+        return phrases[0]
+    if phrases_total == 2:
+        return f"{phrases[0]} {final_combinator} {phrases[1]}"
+    return "".join([(", " if phrase_index != 0 else "") + (final_combinator if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
