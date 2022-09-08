@@ -53,7 +53,7 @@ class CommaDelimitedEnglishPhrasesTest(unittest.TestCase):
                 final_combinator=final_combinator,
                 default=str(uuid.uuid4())
             )
-            expected_output = "".join([(", " if phrase_index != 0 else "") + (final_combinator if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
+            expected_output = "".join([(", " if phrase_index != 0 else "") + (f"{final_combinator} " if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
             self.assertEqual(expected_output, actual_output)
 
     def test_timing_inline(self):
@@ -90,3 +90,16 @@ def test():
         actual_output = writer.getvalue()
         """
         print(f"test_timing_function: {statistics.mean(timeit.repeat(stmt=code, setup=import_module, repeat=100))}")
+
+    def test_manual_example(self):
+        expected_output = "apple, banana, and carrot"
+        actual_output = get_comma_delimited_english_phrases(
+            phrases=[
+                "apple",
+                "banana",
+                "carrot"
+            ],
+            final_combinator="and",
+            default=str(uuid.uuid4())
+        )
+        self.assertEqual(expected_output, actual_output)

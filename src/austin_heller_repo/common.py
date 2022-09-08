@@ -881,4 +881,4 @@ def get_comma_delimited_english_phrases(*, phrases: List[str], final_combinator:
         return phrases[0]
     if phrases_total == 2:
         return f"{phrases[0]} {final_combinator} {phrases[1]}"
-    return "".join([(", " if phrase_index != 0 else "") + (final_combinator if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
+    return "".join([(", " if phrase_index != 0 else "") + (f"{final_combinator} " if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
