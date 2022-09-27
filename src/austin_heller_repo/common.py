@@ -90,13 +90,24 @@ def hash_json_dict(*, json_dict: Dict) -> str:
 class FloatReference():
 
     def __init__(self, *, value: float):
-
         self.__value = value
 
     def get(self) -> float:
         return self.__value
 
     def set(self, *, value: float):
+        self.__value = value
+
+
+class BooleanReference():
+
+    def __init__(self, *, value: bool):
+        self.__value = value
+
+    def get(self) -> bool:
+        return self.__value
+
+    def set(self, *, value: bool):
         self.__value = value
 
 
