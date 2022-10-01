@@ -896,7 +896,19 @@ def get_comma_delimited_english_phrases(*, phrases: List[str], final_combinator:
     return "".join([(", " if phrase_index != 0 else "") + (f"{final_combinator} " if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
 
 
-def convert_decimal_to_complex(*, decimal: Optional[Decimal]) -> Optional[complex]:
-    if decimal is None:
+def convert_decimal_to_complex(*, decimal_value: Optional[Decimal]) -> Optional[complex]:
+    if decimal_value is None:
         return None
-    return complex(decimal.real, decimal.imag)
+    return complex(decimal_value.real, decimal_value.imag)
+
+
+def convert_decimal_to_complex_string(*, decimal_value: Optional[Decimal]) -> Optional[str]:
+    if decimal_value is None:
+        return None
+    return f"{decimal_value.real}+{decimal_value.imag}j"
+
+
+def convert_complex_to_complex_string(*, complex_value: complex) -> Optional[str]:
+    if complex_value is None:
+        return None
+    return f"{complex_value.real}+{complex_value.imag}j"
