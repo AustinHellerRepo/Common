@@ -1,7 +1,8 @@
 from __future__ import annotations
 import os
+from decimal import Decimal
 from enum import Enum
-from typing import List, Tuple, Dict, Callable, Any, Deque, Type, Iterator, Iterable
+from typing import List, Tuple, Dict, Callable, Any, Deque, Type, Iterator, Iterable, Optional
 from abc import ABC, abstractmethod
 import hashlib
 import json
@@ -893,3 +894,9 @@ def get_comma_delimited_english_phrases(*, phrases: List[str], final_combinator:
     if phrases_total == 2:
         return f"{phrases[0]} {final_combinator} {phrases[1]}"
     return "".join([(", " if phrase_index != 0 else "") + (f"{final_combinator} " if phrase_index + 1 == phrases_total else "") + phrase for phrase_index, phrase in enumerate(phrases)])
+
+
+def convert_decimal_to_complex(*, decimal: Optional[Decimal]) -> Optional[complex]:
+    if decimal is None:
+        return None
+    return complex(decimal.real, decimal.imag)
